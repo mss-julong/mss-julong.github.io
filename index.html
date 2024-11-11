@@ -14,33 +14,7 @@
 <body>
   <div style="font-size: 100px; width: 600px; height: 300px;">Hello</div>
 
-  <script>
-    function scaleScreen() {
-      var screenWidth = window.innerWidth;
-      var screenHeight = window.innerHeight;
-      var scaleRatio;
 
-      // 화면이 1024x768보다 작을 경우 축소 비율 설정
-      if (screenWidth < 1920 || screenHeight < 1080) {
-        var widthScale = screenWidth / 1920;
-        var heightScale = screenHeight / 1080;
-        scaleRatio = Math.min(widthScale, heightScale);
-
-        // Transform을 사용해 화면 축소
-        document.body.style.transform = "scale(" + scaleRatio + ")";
-      } else {
-        // 원래 크기로 복원
-        document.body.style.transform = "scale(1)";
-      }
-    }
-
-
-    if (window.screen.width < 1920) {
-      scaleScreen();
-    }
-    // 창 크기 조정 시에도 다시 확인하여 스케일 조정
-    window.onresize = scaleScreen;
-  </script>
 </body>
 
 </html>
