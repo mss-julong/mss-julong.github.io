@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Serial API Example</title>
+  <style>
+    .con {
+      width: 200px;
+      height: 40px;
+      position: relative;
+    }
+
+    .con input {
+      width: 100px;
+      height: 40px;
+      line-height: 40px;
+      color: white;
+      caret-color: #606266;
+    }
+
+    .con input::selection {
+      color: white
+    }
+
+    .con div {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      line-height: 40px;
+      padding: 3px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="con">
+    <input type="password" placeholder="请将光标聚焦于此，等待读取手环" onchange="updateValue(this)" />
+    <div id="display"></div>
+  </div>
+
+  <script>
+    function updateValue(input) {
+      console.log(input)
+      document.getElementById('display').innerHTML = input.value;
+    }
+  </script>
+</body>
+
+</html>
