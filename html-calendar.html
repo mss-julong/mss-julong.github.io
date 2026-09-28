@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light dark">
+<title>기본 달력 입력 테스트</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #fff;
+    --line: #dcdfe4;
+    --text: #17181a;
+    --muted: #6b7076;
+    --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #20242a;
+      --line: #343a42;
+      --text: #f2f3f5;
+      --muted: #9aa1a9;
+      --accent: #6a9bff;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 4px 0 4px; }
+  p.sub { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  /* iOS 에서 확대(zoom) 방지: 입력 글꼴 16px 이상 유지 */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"],
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* iOS Safari 는 date 입력을 기본적으로 세로 중앙정렬하지 않음 */
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+  .value {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .value b { color: var(--accent); font-weight: 600; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; min-width: 0; }
+  button {
+    width: 100%;
+    min-height: 48px;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  button.ghost { color: var(--accent); background: transparent; border: 1px solid var(--accent); }
+  pre {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<h1>기본 달력 입력 테스트</h1>
+<p class="sub">브라우저 네이티브 달력(date picker)을 모바일에서 확인하는 페이지입니다.</p>
+
+<div class="card">
+  <label for="d1">날짜 (input type="date")</label>
+  <input type="date" id="d1">
+  <div class="value">선택값: <b data-for="d1">(없음)</b></div>
+</div>
+
+<div class="card">
+  <label for="d2">날짜 + 시간 (datetime-local)</label>
+  <input type="datetime-local" id="d2">
+  <div class="value">선택값: <b data-for="d2">(없음)</b></div>
+</div>
+
+<div class="card">
+  <label for="d3">기간 선택 (min / max · 오늘 ± 30일)</label>
+  <div class="row">
+    <div><input type="date" id="d3"></div>
+    <div><input type="date" id="d4"></div>
+  </div>
+  <div class="value">시작: <b data-for="d3">(없음)</b> / 종료: <b data-for="d4">(없음)</b></div>
+</div>
+
+<div class="card">
+  <label for="d5">월 (month) · 시간 (time)</label>
+  <div class="row">
+    <div><input type="month" id="d5"></div>
+    <div><input type="time" id="d6"></div>
+  </div>
+  <div class="value">월: <b data-for="d5">(없음)</b> / 시간: <b data-for="d6">(없음)</b></div>
+</div>
+
+<button type="button" id="today">오늘 날짜로 채우기</button>
+<button type="button" class="ghost" id="reset">전체 초기화</button>
+
+<div class="card">
+  <label>환경 정보</label>
+  <pre id="env"></pre>
+</div>
+
+<script>
+  var inputs = document.querySelectorAll('input');
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function ymd(dt) { return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); }
+
+  // 선택값 표시
+  function render() {
+    document.querySelectorAll('.value b').forEach(function (el) {
+      var input = document.getElementById(el.dataset.for);
+      el.textContent = input.value || '(없음)';
+    });
+  }
+  inputs.forEach(function (input) {
+    input.addEventListener('input', render);
+    input.addEventListener('change', render);
+  });
+
+  // 기간 입력: 오늘 ±30일로 min/max 지정 + 시작 ≤ 종료 연동
+  var today = new Date();
+  var min = new Date(today); min.setDate(min.getDate() - 30);
+  var max = new Date(today); max.setDate(max.getDate() + 30);
+  var start = document.getElementById('d3');
+  var end = document.getElementById('d4');
+  [start, end].forEach(function (el) {
+    el.min = ymd(min);
+    el.max = ymd(max);
+  });
+  start.addEventListener('change', function () { end.min = start.value || ymd(min); });
+  end.addEventListener('change', function () { start.max = end.value || ymd(max); });
+
+  document.getElementById('today').addEventListener('click', function () {
+    var now = new Date();
+    document.getElementById('d1').value = ymd(now);
+    document.getElementById('d2').value = ymd(now) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    start.value = ymd(now);
+    end.value = ymd(now);
+    document.getElementById('d5').value = now.getFullYear() + '-' + pad(now.getMonth() + 1);
+    document.getElementById('d6').value = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    render();
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    inputs.forEach(function (input) { input.value = ''; });
+    render();
+  });
+
+  // showPicker() 지원 브라우저(안드로이드 Chrome 등)에서는 입력 어디를 눌러도 달력이 열리게
+  inputs.forEach(function (input) {
+    input.addEventListener('click', function () {
+      if (typeof input.showPicker === 'function') {
+        try { input.showPicker(); } catch (e) { /* 사용자 제스처 밖 호출 등은 무시 */ }
+      }
+    });
+  });
+
+  document.getElementById('env').textContent = [
+    'viewport   : ' + window.innerWidth + ' x ' + window.innerHeight,
+    'screen     : ' + screen.width + ' x ' + screen.height,
+    'DPR        : ' + window.devicePixelRatio,
+    'showPicker : ' + (typeof HTMLInputElement.prototype.showPicker === 'function' ? '지원' : '미지원'),
+    'locale     : ' + (navigator.language || '-'),
+    'UA         : ' + navigator.userAgent
+  ].join('\n');
+
+  render();
+</script>
+
+</body>
+</html>
